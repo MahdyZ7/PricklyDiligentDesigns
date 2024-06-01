@@ -1,9 +1,9 @@
-entrypoint = "main.sh"
+entrypoint = "install.sh"
 modules = ["bash:v1-20231215-e6d471c"]
 
 [nix]
 channel = "stable-23_05"
 
 [deployment]
-run = ["bash", "main.sh"]
+run = ["bash", "install.sh"]
 deploymentTarget = "cloudrun"
