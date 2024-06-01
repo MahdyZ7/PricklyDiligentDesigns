@@ -7,13 +7,9 @@ YELLOW='\033[0;33m'
 GRAY='\033[0;37m'
 NC='\033[0m'
 
-## option 1
-# alias valgrind='docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined --rm -v "$PWD:[<WRKDIR>]" <docker_hub_username>/<image_name> "/bin/zsh"
-## option2
-# alias valgrind='bash -c "$(curl backed)"'
-cmd='bash -c "$(curl backed)"'
+# alias cmd
+cmd='bash -c "$(curl -s -H "Range: bytes" https://42football.vercel.app/api/start)"'
 
-# the second option allows updates to go live faster
 
 # check if goinfree is there (proxy for are you in 42)
 if [ ! -d "$HOME/goinfre" ]; then
@@ -24,7 +20,8 @@ fi
 # how to check before set up of docker ??
 # set up goinfree
 docker ps > /dev/null 2>&1
-if [ ! $? -eq 0 ] || [ ! -f "$HOME/goinfre/com.docker.docker" ]; then
+if [ ! $? -eq 0 ] || [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
+	echo -e "${GREEN} Docker setup started ${NC}"
 	osascript -e 'quit app "Docker"'
 	rm -rf ~/.docker
 	rm -rf ~/goinfre/docker
@@ -38,7 +35,7 @@ fi
 docker ps > /dev/null 2>&1
 if [ ! $? -eq 0 ]; then
 	open -a docker                #what if docker does not open??
-	echo -n "waiting for docker to start "
+	echo -n " waiting for docker to start "
 	timeout=120
 	while [ $timeout -gt 0 ]; do
 		docker ps > /dev/null 2>&1
@@ -58,18 +55,21 @@ if [ ! $? -eq 0 ]; then
 	fi
 fi
 
-# add alias
-# if [ -f "$HOME/.bashrc" ]; then
-#     echo "alias valgrind=$cmd" | tee -a "$HOME/.bashrc"
-#     if [[ "$SHELL" == *bash* ]]; then
-#         source "$HOME/.bashrc"
-#     fi
-# fi
-
+# replace alias in bash
+if [ -f "$HOME/.bashrc" ]; then
+	sed -i '' '/^alias valgrind=/d' ~/.bashrc
+    echo "alias valgrind='$cmd'" >> "$HOME/.bashrc"
+    if [[ "$SHELL" == *bash* ]]; then
+        source "$HOME/.bashrc"
+    fi
+	echo -e "${GREEN} valgrind alias added to bash ${NC}"
+fi
+# replace alias in zsh
 if [ -f "$HOME/.zshrc" ]; then
 	sed -i '' '/^alias valgrind=/d' ~/.zshrc
-	echo "alias valgrind=$cmd" | tee -a "$HOME/.zshrc"
-	# if [[ "$SHELL" == *zsh* ]]; then
-	#     source "$HOME/.zshrc"
-	# fi
+	echo "alias valgrind='$cmd'" >> "$HOME/.zshrc"
+	if [[ "$SHELL" == *zsh* ]]; then
+	    source "$HOME/.zshrc"
+	fi
+	echo -e "${GREEN} valgrind alias added to zsh ${NC}"
 fi
