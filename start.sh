@@ -7,9 +7,10 @@ YELLOW='\033[0;33m'
 GRAY='\033[0;37m'
 NC='\033[0m'
 
+
 # set up goinfre
 docker ps > /dev/null 2>&1
-if [ ! $? -eq 0 ] || [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
+if [ ! $? -eq 0 ] && [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
 	echo -e "${GREEN} Docker setup started ${NC}"
 	osascript -e 'quit app "Docker"'
 	rm -rf ~/.docker
