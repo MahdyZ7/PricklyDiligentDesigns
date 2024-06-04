@@ -7,10 +7,7 @@ YELLOW='\033[0;33m'
 GRAY='\033[0;37m'
 NC='\033[0m'
 
-
-# set up goinfre
-docker ps > /dev/null 2>&1
-if [ ! $? -eq 0 ] && [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
+function setup_docker() {
 	echo -e "${GREEN} Docker setup started ${NC}"
 	osascript -e 'quit app "Docker"'
 	rm -rf ~/.docker
@@ -18,15 +15,21 @@ if [ ! $? -eq 0 ] && [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
 	mkdir -p ~/goinfre/com.docker.docker
 	rm -rf ~/Library/Containers/com.docker.docker
 	ln -s ~/goinfre/com.docker.docker ~/Library/Containers/com.docker.docker
-fi
+	return 0
+}
 
+# set up goinfre
+if [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
+	setup_docker
+fi
 
 # open docker
 docker ps > /dev/null 2>&1
 if [ ! $? -eq 0 ]; then
 	open -a docker                #what if docker does not open??
 	echo -n " waiting for docker to start "
-	timeout=120
+	timeout=60
+	tries=1;
 	while [ $timeout -gt 0 ]; do
 		docker ps > /dev/null 2>&1
 		if [ $? -eq 0 ]; then
@@ -36,6 +39,12 @@ if [ ! $? -eq 0 ]; then
 			echo -n "."
 			sleep 1
 			timeout=$((timeout - 1))
+			if [ $timeout -eq 0 ] && [ $tries -gt 0 ]; then
+				tries=$((tries - 1))
+				timeout=60
+				setup_docker
+				open -a docker
+			fi
 		fi
 	done
 	if [ $timeout -eq 0 ]; then
@@ -45,4 +54,4 @@ if [ ! $? -eq 0 ]; then
 	fi
 fi
 
-docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined --rm -v "$PWD:/home/Developer" mahdyz7/rust_container
+docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined --rm -v "$PWD:/home/Developer" mahdyz7/rust_container:latest

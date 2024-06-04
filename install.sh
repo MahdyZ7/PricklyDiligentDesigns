@@ -8,7 +8,7 @@ GRAY='\033[0;37m'
 NC='\033[0m'
 
 # alias cmd
-cmd='bash -c "$(curl -s -H "Range: bytes" https://42football.vercel.app/api/start)"'
+cmd='bash -c "$(curl -s -H "Range: bytes" https://raw.githubusercontent.com/MahdyZ7/PricklyDiligentDesigns/main/start.sh)"'
 
 
 # check if goinfree is there (proxy for are you in 42)
@@ -17,10 +17,7 @@ if [ ! -d "$HOME/goinfre" ]; then
 	exit 1
 fi
 
-# how to check before set up of docker ??
-# set up goinfree
-docker ps > /dev/null 2>&1
-if [ ! $? -eq 0 ] || [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
+function setup_docker() {
 	echo -e "${GREEN} Docker setup started ${NC}"
 	osascript -e 'quit app "Docker"'
 	rm -rf ~/.docker
@@ -28,15 +25,21 @@ if [ ! $? -eq 0 ] || [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
 	mkdir -p ~/goinfre/com.docker.docker
 	rm -rf ~/Library/Containers/com.docker.docker
 	ln -s ~/goinfre/com.docker.docker ~/Library/Containers/com.docker.docker
-fi
+	return 0
+}
 
+# set up goinfre
+if [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
+	setup_docker
+fi
 
 # open docker
 docker ps > /dev/null 2>&1
 if [ ! $? -eq 0 ]; then
 	open -a docker                #what if docker does not open??
 	echo -n " waiting for docker to start "
-	timeout=120
+	timeout=60
+	tries=1;
 	while [ $timeout -gt 0 ]; do
 		docker ps > /dev/null 2>&1
 		if [ $? -eq 0 ]; then
@@ -46,6 +49,12 @@ if [ ! $? -eq 0 ]; then
 			echo -n "."
 			sleep 1
 			timeout=$((timeout - 1))
+			if [ $timeout -eq 0 ] && [ $tries -gt 0 ]; then
+				tries=$((tries - 1))
+				timeout=60
+				setup_docker
+				open -a docker
+			fi
 		fi
 	done
 	if [ $timeout -eq 0 ]; then
@@ -73,3 +82,5 @@ if [ -f "$HOME/.zshrc" ]; then
 	fi
 	echo -e "${GREEN} valgrind alias added to zsh ${NC}"
 fi
+
+docker pull mahdyz7/rust_container:latest
