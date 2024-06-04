@@ -17,52 +17,8 @@ if [ ! -d "$HOME/goinfre" ]; then
 	exit 1
 fi
 
-function setup_docker() {
-	echo -e "${GREEN} Docker setup started ${NC}"
-	osascript -e 'quit app "Docker"'
-	rm -rf ~/.docker
-	rm -rf ~/goinfre/docker
-	mkdir -p ~/goinfre/com.docker.docker
-	rm -rf ~/Library/Containers/com.docker.docker
-	ln -s ~/goinfre/com.docker.docker ~/Library/Containers/com.docker.docker
-	return 0
-}
-
-# set up goinfre
-if [ ! -d "$HOME/goinfre/com.docker.docker" ]; then
-	setup_docker
-fi
-
-# open docker
-docker ps > /dev/null 2>&1
-if [ ! $? -eq 0 ]; then
-	open -a docker                #what if docker does not open??
-	echo -n " waiting for docker to start "
-	timeout=60
-	tries=1;
-	while [ $timeout -gt 0 ]; do
-		docker ps > /dev/null 2>&1
-		if [ $? -eq 0 ]; then
-			echo
-			break
-		else
-			echo -n "."
-			sleep 1
-			timeout=$((timeout - 1))
-			if [ $timeout -eq 0 ] && [ $tries -gt 0 ]; then
-				tries=$((tries - 1))
-				timeout=60
-				setup_docker
-				open -a docker
-			fi
-		fi
-	done
-	if [ $timeout -eq 0 ]; then
-		echo -e "${RED}Docker failed to start.${NC}"
-		echo -e "${RED}Please check docker is installed and try again.${NC}"
-		exit 1
-	fi
-fi
+#check and start docker if needed
+curl -s -H 'Range: bytes' https://raw.githubusercontent.com/MahdyZ7/PricklyDiligentDesigns/main/start_docker.sh | bash
 
 # replace alias in bash
 if [ -f "$HOME/.bashrc" ]; then
